@@ -1,0 +1,72 @@
+// @flow
+
+export interface ServiceDiscovery {
+  announce(ServiceOptions): Promise<Service>;
+  discover(ServiceQuery): Discovery;
+}
+
+export type Protocol = "udp" | "tcp"
+
+export interface ServiceOptions {
+  name: string;
+  type: string;
+  protocol: Protocol;
+  port?: number;
+  attributes?: { [string]: string };
+}
+
+export interface ServiceInfo {
+  name: string;
+  type: string;
+  domain: string;
+  protocol: Protocol;
+  host: string;
+  port: number;
+  addresses: string[];
+  attributes: { [string]: string };
+}
+
+export interface Service extends ServiceInfo {
+  expire(): Promise<void>;
+}
+
+export interface ServiceQuery {
+  protocol: Protocol;
+  type: string;
+}
+
+export interface Discovery extends AsyncIterator<DiscoveredService> {
+  query: ServiceQuery;
+}
+
+export interface DiscoveredService extends ServiceInfo {
+  lost: boolean;
+}
+
+export interface ServiceID {
+  serviceID: string;
+}
+
+export interface RegisteredService {
+  serviceID: ServiceID;
+  info: ServiceInfo;
+}
+export interface DiscoveryID {
+  discoveryID: number;
+}
+
+export type Inbox = "/libdweb/ServiceDiscovery/Discovery"
+
+export type DiscoveryMessage =
+  | { type: "onStartDiscoveryFailed", to: number, errorCode: number }
+  | { type: "onStopDiscoveryFailed", to: number, errorCode: number }
+  | { type: "onDiscoveryStopped", to: number }
+  | { type: "onServiceLost", to: number, lost: ServiceInfo }
+  | { type: "onServiceFound", to: number, found: ServiceInfo }
+
+export interface HostService {
+  startService(ServiceOptions): Promise<RegisteredService>;
+  stopService(ServiceID): Promise<void>;
+  startDiscovery(DiscoveryID, ServiceQuery): void;
+  stopDiscovery(DiscoveryID): void;
+}

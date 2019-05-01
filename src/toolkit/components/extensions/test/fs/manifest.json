@@ -1,0 +1,33 @@
+{
+  "manifest_version": 2,
+  "version": "0.1",
+  "name": "fs-test@libdweb",
+  "description": "test libdweb APIs",
+
+  "experiment_apis": {
+    "test": {
+      "schema": "../../schemas/test.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "paths": [["test"]],
+        "script": "../../child/ext-test.js"
+      }
+    },
+    "FileSystem": {
+      "schema": "../../schemas/fs.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "paths": [["FileSystem"]],
+        "script": "../../child/ext-fs.js"
+      },
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["FileSystem"]],
+        "script": "../../parent/ext-fs.js"
+      }
+    }
+  },
+  "background": {
+    "scripts": ["test.js"]
+  }
+}

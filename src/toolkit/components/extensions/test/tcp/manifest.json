@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+  "version": "0.1",
+  "name": "test-tcp@libdweb",
+  "description": "TCPSocket API tests",
+  "permissions": [],
+
+  "experiment_apis": {
+    "test": {
+      "schema": "../../schemas/test.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "paths": [["test"]],
+        "script": "../../child/ext-test.js"
+      }
+    },
+    "TCPSocket": {
+      "schema": "../../schemas/tcp.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "paths": [["TCPSocket"]],
+        "script": "../../child/ext-tcp.js"
+      }
+    }
+  },
+  "background": {
+    "scripts": ["test.js"]
+  }
+}

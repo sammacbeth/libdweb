@@ -1,0 +1,76 @@
+{
+  "manifest_version": 2,
+  "version": "0.1",
+  "name": "libdweb API tests",
+  "description": "test libdweb APIs",
+
+  "experiment_apis": {
+    "test": {
+      "schema": "../../schemas/test.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "paths": [["test"]],
+        "script": "../../child/ext-test.js"
+      }
+    },
+    "TCPSocket": {
+      "schema": "../../schemas/tcp.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "paths": [["TCPSocket"]],
+        "script": "../../child/ext-tcp.js"
+      }
+    },
+    "protocol": {
+      "schema": "../../schemas/protocol.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "paths": [["protocol"]],
+        "script": "../../child/ext-protocol.js"
+      },
+      "parent": {
+        "events": ["startup"],
+        "scopes": ["addon_parent"],
+        "paths": [["protocol"]],
+        "script": "../../parent/ext-protocol.js"
+      }
+    },
+    "ServiceDiscovery": {
+      "schema": "../../schemas/dns-sd.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "paths": [["ServiceDiscovery"]],
+        "script": "../../child/ext-dns-sd.js"
+      },
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["ServiceDiscovery"]],
+        "script": "../../parent/ext-dns-sd.js"
+      }
+    },
+    "FileSystem": {
+      "schema": "../../schemas/fs.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "paths": [["FileSystem"]],
+        "script": "../../child/ext-fs.js"
+      },
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["FileSystem"]],
+        "script": "../../parent/ext-fs.js"
+      }
+    },
+    "UDPSocket": {
+      "schema": "../../schemas/udp.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "paths": [["UDPSocket"]],
+        "script": "../../child/ext-udp.js"
+      }
+    }
+  },
+  "background": {
+    "scripts": ["test.js"]
+  }
+}
