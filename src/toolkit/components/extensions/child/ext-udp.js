@@ -417,5 +417,5 @@ Cu.importGlobalProperties(["URL"])
   }
 
   const noOptions = {}
-  const debug = true
+  const debug = false
 }

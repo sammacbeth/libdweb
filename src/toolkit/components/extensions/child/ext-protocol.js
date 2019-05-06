@@ -156,8 +156,8 @@ interface Client {
               value == null
                 ? null
                 : typeof value === "string"
-                  ? encoder.encode(value).buffer
-                  : value.buffer
+                ? encoder.encode(value).buffer
+                : value.buffer
 
             if (buffer) {
               this.enqueue(buffer)
@@ -204,21 +204,18 @@ interface Client {
 
     onWrite(buffer) {
       const { body, id } = this
-      console.log(`ProtocolRequest.onWrite ${id}`, body, buffer)
       if (body) {
         body.onWrite(buffer)
       }
     }
     onClose() {
       const { body, id } = this
-      console.log(`ProtocolRequest.onClose ${id}`, body)
       if (body) {
         body.onClose()
       }
     }
     onError(message) {
       const { body, id } = this
-      console.log(`ProtocolRequest.onError ${id}`, body, message)
       if (body) {
         body.onError(message)
       }

@@ -54,7 +54,7 @@ import type {
 } from "./interface/protocol.js"
 */
 const EXPORTED_SYMBOLS = ["Supervisor", "Agent"]
-const debug = true
+const debug = false
 const {
   classes: Cc,
   interfaces: Ci,
@@ -1264,7 +1264,7 @@ class ProtocolHandler /*::implements nsIProtocolHandler*/ {
     this.handler = handler
     this.protocolFlags =
       Ci.nsIProtocolHandler.URI_STD |
-      Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE |
+      Ci.nsIProtocolHandler.URI_LOADABLE_BY_ANYONE |
       Ci.nsIProtocolHandler.URI_IS_POTENTIALLY_TRUSTWORTHY
   }
   toJSON() {
