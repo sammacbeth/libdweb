@@ -240,7 +240,7 @@ interface Client {
       this.inbox = context.messageManager
     }
     receiveMessage({ name, data, target } /*: HandlerInbox */) {
-      console.log(`Receive message Addon.Child ${name} ${JSON.stringify(data)}`)
+      // console.log(`Receive message Addon.Child ${name} ${JSON.stringify(data)}`)
       switch (data.type) {
         case "start-request": {
           return void this.onStartRequest(data, target)
@@ -303,22 +303,22 @@ interface Client {
       } = data
       const handler = this.handlers[scheme]
 
-      console.log("ProtocolClient.onStartRequest", data, typeof handler)
+      // console.log("ProtocolClient.onStartRequest", data, typeof handler)
       try {
         const source =
           contentLength === 0 ? null : new RequestBodySource(id, outbox)
 
-        console.log(
-          "ProtocolClient.onStartRequest -> new Request",
-          method,
-          source,
-          headers,
-          credentials,
-          cache,
-          redirect,
-          referrer,
-          integrity
-        )
+        // console.log(
+        //   "ProtocolClient.onStartRequest -> new Request",
+        //   method,
+        //   source,
+        //   headers,
+        //   credentials,
+        //   cache,
+        //   redirect,
+        //   referrer,
+        //   integrity
+        // )
 
         const request = createProtocolRequest(
           this.context.cloneScope,
@@ -335,11 +335,11 @@ interface Client {
           }
         )
 
-        console.log(
-          `ProtocolClient.onStartRequest ${id} <- new Request `,
-          request.body,
-          request.gozlik
-        )
+        // console.log(
+        //   `ProtocolClient.onStartRequest ${id} <- new Request `,
+        //   request.body,
+        //   request.gozlik
+        // )
 
         const response = new ProtocolRequest(
           id,
@@ -349,7 +349,7 @@ interface Client {
         )
 
         this.requests[id] = response
-        console.log(`ProtocolClient.onStartRequest register ${id}`)
+        // console.log(`ProtocolClient.onStartRequest register ${id}`)
         response.resume()
       } catch (error) {
         const message = error.toString()
@@ -385,22 +385,22 @@ interface Client {
     }
     onWriteRequestStream(data) {
       const request = this.requests[data.id]
-      console.log("ProtocolClient.onWriteRequestStream", request, data)
+      // console.log("ProtocolClient.onWriteRequestStream", request, data)
       request.onWrite(data.buffer)
     }
     onCloseRequestStream(data) {
       const request = this.requests[data.id]
-      console.log("ProtocolClient.onCloseRequestStream", request, data)
+      // console.log("ProtocolClient.onCloseRequestStream", request, data)
       request.onClose()
     }
     onErrorRequestStream(data) {
       const request = this.requests[data.id]
-      console.log(
-        "ProtocolClient.onErrorRequestStream",
-        request,
-        data,
-        Object.keys(this.requests)
-      )
+      // console.log(
+      //   "ProtocolClient.onErrorRequestStream",
+      //   request,
+      //   data,
+      //   Object.keys(this.requests)
+      // )
       request.onError(data.message)
     }
 
@@ -455,7 +455,7 @@ interface Client {
     }
     onWrite(buffer) {
       const { controller, id, outbox } = this
-      console.log(`RequestBodySource.onWrite ${id}`, controller, buffer)
+      // console.log(`RequestBodySource.onWrite ${id}`, controller, buffer)
       if (controller) {
         Reflect.apply(controller.enqueue, controller, [
           Cu.cloneInto(new Uint8Array(buffer), controller)
@@ -467,14 +467,14 @@ interface Client {
     }
     onClose() {
       const { controller, id } = this
-      console.log(`RequestBodySource.onClose ${id}`, controller)
+      // console.log(`RequestBodySource.onClose ${id}`, controller)
       if (controller) {
         controller.close()
       }
     }
     onError(message) {
       const { controller, id } = this
-      console.log(`RequestBodySource.onError ${id}`, controller, message)
+      // console.log(`RequestBodySource.onError ${id}`, controller, message)
       if (controller) {
         controller.error(new Error(message))
       }
