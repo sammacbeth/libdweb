@@ -16,10 +16,10 @@
     },
     "TCPSocket": {
       "schema": "../../schemas/tcp.json",
-      "child": {
-        "scopes": ["addon_child"],
+      "parent": {
+        "scopes": ["addon_parent"],
         "paths": [["TCPSocket"]],
-        "script": "../../child/ext-tcp.js"
+        "script": "../../parent/ext-tcp.js"
       }
     }
   },
