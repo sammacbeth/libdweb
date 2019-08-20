@@ -270,6 +270,7 @@ Cu.importGlobalProperties(["URL"])
       }
 
       let serverIdx = 0
+      let connectionIdx = 0
 
       return {
         TCPSocket: {
@@ -300,10 +301,12 @@ Cu.importGlobalProperties(["URL"])
                 })
 
                 const client = {
+                  id: ++connectionIdx,
                   host: options.host,
                   port: options.port,
                   ssl: socket.ssl,
-                  readyState: socket.readyState
+                  readyState: socket.readyState,
+                  bufferedAmount: socket.bufferedAmount
                 }
                 // await client.opened
                 resolve(client)
