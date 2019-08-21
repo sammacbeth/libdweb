@@ -1,5 +1,14 @@
 const { ExtensionError } = ExtensionUtils
 
+const AsAsyncIterator = constructor => {
+  const $Symbol /*:any*/ = Symbol
+  const prototype /*:Object*/ = constructor.prototype
+  prototype[$Symbol.asyncIterator] = function() {
+    return this
+  }
+  return constructor
+}
+
 const exportClass = /*::<b, a:Class<b>>*/ (
   scope /*:Object*/,
   constructor /*:a*/
@@ -51,6 +60,7 @@ const exportInstance = /*::<a:Object, b:a>*/ (
 
 global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
   getAPI(context) {
+    const servers = new Map()
     const connections = new Map()
     const connectionInternal = new Map()
 
@@ -61,10 +71,6 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
     const TCPClient = exportClass(
       context.cloneScope,
       class TCPClient {
-        /*::
-        opened:Promise<void>
-        closed:Promise<void>
-        */
         constructor() {
           throw TypeError("Illegal constructor")
         }
@@ -151,6 +157,99 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
       }
     )
 
+    const done = Cu.cloneInto({ done: true }, context.cloneScope)
+    const next = value => {
+      const result = Cu.cloneInto({ done: false }, context.cloneScope)
+      Reflect.defineProperty(result, "value", { value })
+      return result
+    }
+
+    const createClientSocket = (socket /*:TCPSocketAPI*/) /*:ClientSocket*/ => {
+      console.log("xxx", socket)
+
+      const internals = {
+        buffer: []
+      }
+      socket.opened = new context.cloneScope.Promise(resolve => {
+        internals.onOpened = resolve
+      })
+      socket.closed = new context.cloneScope.Promise(resolve => {
+        internals.onClosed = resolve
+      })
+      connections.set(socket.id, socket)
+      connectionInternal.set(socket.id, internals)
+
+      const client = exportInstance(context.cloneScope, TCPClient, {
+        __id: socket.id
+      })
+      return client
+    }
+
+    const TCPConnections = exportClass(
+      context.cloneScope,
+      AsAsyncIterator(
+        class TCPConnections {
+          constructor() {
+            throw TypeError("Illegal constructor")
+          }
+          next() {
+            return new context.cloneScope.Promise(async (resolve, reject) => {
+              try {
+                const socket = await context.childManager.callParentAsyncFunction(
+                  "TCPSocket.pollServer",
+                  [this.__id]
+                )
+                if (socket) {
+                  resolve(next(createClientSocket(socket)))
+                } else {
+                  resolve(done)
+                }
+              } catch (e) {
+                reject(e.toString())
+              }
+            })
+          }
+          return() {
+            context.childManager.callParentAsyncFunction(
+              "TCPSocket.closeServer",
+              [this.__id]
+            )
+            return done
+          }
+        }
+      )
+    )
+
+    const TCPServer = exportClass(
+      context.cloneScope,
+      class TCPServer {
+        /*::
+        connections:AsyncIterator<ClientSocket>
+        */
+        constructor() {
+          throw TypeError("Illegal constructor")
+        }
+        get localPort() {
+          return servers.get(this.__id).localPort
+        }
+        get closed() {
+          return servers.get(this.__id).closed
+        }
+        get connections() {
+          const connections = exportInstance(
+            context.cloneScope,
+            TCPConnections,
+            { __id: this.__id }
+          )
+          return connections
+        }
+        close() {
+          server.close()
+          servers.delete(this.__id)
+        }
+      }
+    )
+
     const pollEvents = async () => {
       const events = await context.childManager.callParentAsyncFunction(
         "TCPSocket.pollEventQueue",
@@ -185,15 +284,28 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
     return {
       TCPSocket: {
         listen: options =>
-          new Promise(async (resolve, reject) => {
+          new context.cloneScope.Promise(async (resolve, reject) => {
             try {
               const parentServer = await context.childManager.callParentAsyncFunction(
                 "TCPSocket.listen",
                 [options]
               )
-              // const server = exportInstance(context.cloneScope, TCPServer)
-              // console.log(server);
-              resolve(createTCPServer(parentServer))
+              console.log("xxx server", parentServer)
+
+              const internals = {
+                localPort: parentServer.localPort,
+                connections: []
+              }
+              internals.closed = new context.cloneScope.Promise(resolve => {
+                internals.onClosed = resolve
+              })
+              servers.set(parentServer.id, internals)
+              const server = exportInstance(context.cloneScope, TCPServer, {
+                __id: parentServer.id
+              })
+              // server.__id = parentServer.id
+              console.log("xxx s", server, server.localPort)
+              resolve(server)
             } catch (e) {
               reject(new ExtensionError(e.toString()))
             }
@@ -205,24 +317,9 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
                 "TCPSocket.connect",
                 [options]
               )
-              console.log("xxx", socket)
-              const internals = {
-                buffer: []
-              }
-              socket.opened = new context.cloneScope.Promise(resolve => {
-                internals.onOpened = resolve
-              })
-              socket.closed = new context.cloneScope.Promise(resolve => {
-                internals.onClosed = resolve
-              })
-              connections.set(socket.id, socket)
-              connectionInternal.set(socket.id, internals)
-
-              const client = exportInstance(context.cloneScope, TCPClient)
-              client.__id = socket.id
-
-              resolve(client)
+              resolve(createClientSocket(socket))
             } catch (e) {
+              console.error(e.toString())
               reject(new ExtensionError(e))
             }
           })
