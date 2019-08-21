@@ -231,7 +231,10 @@ Cu.importGlobalProperties(["URL"])
                 const server = await Server.new(options)
 
                 servers.set(id, server)
-                console.log("xxx", server, id)
+                server.closed.then(() => {
+                  emit(["serverClose", id])
+                  servers.delete(id)
+                })
                 resolve({
                   id,
                   localPort: server.localPort
@@ -283,7 +286,6 @@ Cu.importGlobalProperties(["URL"])
           write: (socketId, buffer, byteOffset, byteLength) => {
             return new context.cloneScope.Promise((resolve, reject) => {
               const socket = clients.get(socketId)
-              console.log("write", buffer, byteOffset, byteLength)
               if (socket.send(buffer, byteOffset, byteLength)) {
                 resolve()
               } else {

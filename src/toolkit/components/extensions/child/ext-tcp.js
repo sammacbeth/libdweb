@@ -165,8 +165,6 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
     }
 
     const createClientSocket = (socket /*:TCPSocketAPI*/) /*:ClientSocket*/ => {
-      console.log("xxx", socket)
-
       const internals = {
         buffer: []
       }
@@ -244,8 +242,10 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
           return connections
         }
         close() {
-          server.close()
-          servers.delete(this.__id)
+          context.childManager.callParentAsyncFunction(
+            "TCPSocket.closeServer",
+            [this.__id]
+          )
         }
       }
     )
@@ -258,6 +258,13 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
       console.log("xxx events", events)
       events.forEach(event => {
         const type = event[0]
+
+        if (type === "serverClose") {
+          const server = servers.get(event[1])
+          server.onClosed()
+          return
+        }
+
         const socket = Object.assign(connections.get(event[1].id), event[1])
         const internal = connectionInternal.get(event[1].id)
         connections.set(socket.id, socket)
@@ -290,7 +297,6 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
                 "TCPSocket.listen",
                 [options]
               )
-              console.log("xxx server", parentServer)
 
               const internals = {
                 localPort: parentServer.localPort,
@@ -303,8 +309,6 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
               const server = exportInstance(context.cloneScope, TCPServer, {
                 __id: parentServer.id
               })
-              // server.__id = parentServer.id
-              console.log("xxx s", server, server.localPort)
               resolve(server)
             } catch (e) {
               reject(new ExtensionError(e.toString()))
