@@ -255,7 +255,6 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
         "TCPSocket.pollEventQueue",
         []
       )
-      console.log("xxx events", events)
       events.forEach(event => {
         const type = event[0]
 
