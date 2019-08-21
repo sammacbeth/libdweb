@@ -294,6 +294,29 @@ Cu.importGlobalProperties(["URL"])
                   reject(new IOError(`${name}: ${message}`))
               }
             })
+          },
+          suspend: socketId => {
+            const socket = clients.get(socketId)
+            socket.suspend()
+          },
+          resume: socketId => {
+            const socket = clients.get(socketId)
+            socket.resume()
+          },
+          close: socketId => {
+            return new context.cloneScope.Promise(resolve => {
+              const socket = clients.get(socketId)
+              socket.close()
+              resolve()
+            })
+          },
+          closeImmediately: socketId => {
+            const socket = clients.get(socketId)
+            socket.closeImmediately()
+          },
+          upgradeToSecure: socketId => {
+            const socket = clients.get(socketId)
+            socket.upgradeToSecure()
           }
         }
       }
