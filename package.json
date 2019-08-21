@@ -1,5 +1,5 @@
 {
-  "version": "0.0.6",
+  "version": "0.0.7",
   "name": "@sammacbeth/libdweb",
   "description": "Experimental WebExtensions API for enabling DWeb protocols",
   "keywords": [
