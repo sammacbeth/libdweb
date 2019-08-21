@@ -184,7 +184,7 @@ Cu.importGlobalProperties(["URL"])
   global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
     getAPI(context) {
       const servers = new Map()
-      const clients = new WeakMap()
+      const clients = new Map()
       const connections = new WeakMap()
       const sockets = new Set()
 
@@ -197,80 +197,30 @@ Cu.importGlobalProperties(["URL"])
         }
       })
 
-      class TCPConnections {
-        /*::
-        @@asyncIterator: () => self
-        // server:Server
-        */
-        constructor() {
-          throw TypeError("Illegal constructor")
-        }
-        next() {
-          return new context.cloneScope.Promise((resolve, reject) => {
-            const self = derefConnections(this)
-            self.request(socket => {
-              if (socket) {
-                resolve(next(createClientSocket(socket)))
-              } else {
-                resolve(done)
-              }
-            }, reject)
-          })
-        }
-        return() {
-          derefConnections(this).close()
-          return done
-        }
-      }
-
-      class TCPServer {
-        /*::
-        connections:AsyncIterator<ClientSocket>
-        */
-        constructor() {
-          throw TypeError("Illegal constructor")
-        }
-        close() {
-          const server = derefServer(this)
-          server.close()
-          sockets.delete(server)
-          servers.delete(server)
-        }
-        get localPort() {
-          return derefServer(this).localPort
-        }
-        get closed() {
-          return context.wrapPromise(derefServer(this).closed)
-        }
-      }
-
-      const createClientSocket = (
-        socket /*:TCPSocketAPI*/
-      ) /*:ClientSocket*/ => {
-        const client = {
-          host: "",
-          port: 0
-        }
-        // clients.set(client, socket)
-        // sockets.add(socket)
-
-        client.opened = socket.readyState === "open"
-        //     ? voidPromise
-        //     : new context.cloneScope.Promise((resolve, reject) => {
-        //         socket.onopen = () => resolve()
-        //       })
-
-        // client.closed = new Promise((resolve, reject) => {
-        //   socket.onclose = () => resolve()
-        //   socket.onerror = event =>
-        //     reject(new IOError(`${event.name}: ${event.message}`))
-        // })
-
-        return client
-      }
-
       let serverIdx = 0
       let connectionIdx = 0
+
+      let eventQueue = []
+      let pendingPoll = null
+
+      const emit = event => {
+        if (pendingPoll) {
+          pendingPoll(event)
+        } else {
+          eventQueue.push(event)
+        }
+      }
+
+      const serialiseSocket = (socket, id) => {
+        return {
+          id,
+          host: socket.host,
+          port: socket.port,
+          ssl: socket.ssl,
+          readyState: socket.readyState,
+          bufferedAmount: socket.bufferedAmount
+        }
+      }
 
       return {
         TCPSocket: {
@@ -300,20 +250,44 @@ Cu.importGlobalProperties(["URL"])
                   binaryType: "arraybuffer"
                 })
 
-                const client = {
-                  id: ++connectionIdx,
-                  host: options.host,
-                  port: options.port,
-                  ssl: socket.ssl,
-                  readyState: socket.readyState,
-                  bufferedAmount: socket.bufferedAmount
+                const client = serialiseSocket(socket, ++connectionIdx)
+                clients.set(client.id, socket)
+
+                socket.onopen = () => {
+                  emit(["open", serialiseSocket(socket, client.id)])
                 }
-                // await client.opened
+                socket.onclose = () => {
+                  emit(["close", serialiseSocket(socket, client.id)])
+                }
+                socket.onerror = () => {
+                  emit(["error", serialiseSocket(socket, client.id)])
+                }
+                socket.ondrain = () => {
+                  emit(["drain", serialiseSocket(socket, client.id)])
+                }
+                socket.ondata = () => {
+                  emit(["data", serialiseSocket(socket, client.id)])
+                }
                 resolve(client)
               } catch (error) {
+                console.error(error)
                 reject(error.toString())
               }
+            }),
+          pollEventQueue: () => {
+            return new context.cloneScope.Promise(resolve => {
+              if (eventQueue.length > 0) {
+                resolve(Cu.cloneInto(eventQueue, context.cloneScope))
+                eventQueue = []
+              } else {
+                pendingPoll = event => {
+                  resolve(Cu.cloneInto([event], context.cloneScope))
+                  eventQueue = []
+                  pendingPoll = null
+                }
+              }
             })
+          }
         }
       }
     }

@@ -52,6 +52,8 @@ const exportInstance = /*::<a:Object, b:a>*/ (
 global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
   getAPI(context) {
     const connections = new Map()
+    const socketOpenResolvers = new Map()
+    const socketCloseResolvers = new Map()
 
     const derefSocket = client => {
       return connections.get(client.__id)
@@ -81,6 +83,12 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
         }
         get bufferedAmount() {
           return derefSocket(this).bufferedAmount
+        }
+        get opened() {
+          return derefSocket(this).opened
+        }
+        get closed() {
+          return derefSocket(this).closed
         }
         write(buffer, byteOffset, byteLength) {
           const socket = derefSocket(this)
@@ -121,6 +129,30 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
       }
     )
 
+    const pollEvents = async () => {
+      const events = await context.childManager.callParentAsyncFunction(
+        "TCPSocket.pollEventQueue",
+        []
+      )
+      console.log("xxx events", events)
+      events.forEach(([type, data]) => {
+        const socket = connections.get(data.id)
+        switch (type) {
+          case "open":
+            socketOpenResolvers.get(data.id)()
+            socketOpenResolvers.delete(data.id)
+            break
+          case "close":
+            socketCloseResolvers.get(data.id)()
+            socketCloseResolvers.delete(data.id)
+            break
+        }
+        connections.set(data.id, Object.assign(socket, data))
+      })
+      pollEvents()
+    }
+    pollEvents()
+
     return {
       TCPSocket: {
         listen: options =>
@@ -140,15 +172,21 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
         connect: options =>
           new context.cloneScope.Promise(async (resolve, reject) => {
             try {
-              const parentServer = await context.childManager.callParentAsyncFunction(
+              const socket = await context.childManager.callParentAsyncFunction(
                 "TCPSocket.connect",
                 [options]
               )
-              console.log("xxx", parentServer)
-              connections.set(parentServer.id, parentServer)
+              console.log("xxx", socket)
+              socket.opened = new context.cloneScope.Promise(resolve => {
+                socketOpenResolvers.set(socket.id, resolve)
+              })
+              socket.closed = new context.cloneScope.Promise(resolve => {
+                socketCloseResolvers.set(socket.id, resolve)
+              })
+              connections.set(socket.id, socket)
 
               const client = exportInstance(context.cloneScope, TCPClient)
-              client.__id = parentServer.id
+              client.__id = socket.id
 
               resolve(client)
             } catch (e) {
