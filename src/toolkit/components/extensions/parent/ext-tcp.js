@@ -259,12 +259,6 @@ Cu.importGlobalProperties(["URL"])
                 socket.onclose = () => {
                   emit(["close", serialiseSocket(socket, client.id)])
                 }
-                socket.onerror = () => {
-                  emit(["error", serialiseSocket(socket, client.id)])
-                }
-                socket.ondrain = () => {
-                  emit(["drain", serialiseSocket(socket, client.id)])
-                }
                 socket.ondata = event => {
                   emit(["data", serialiseSocket(socket, client.id), event.data])
                 }
@@ -288,7 +282,19 @@ Cu.importGlobalProperties(["URL"])
               }
             })
           },
-          write: (socketId, data) => {}
+          write: (socketId, buffer, byteOffset, byteLength) => {
+            return new context.cloneScope.Promise((resolve, reject) => {
+              const socket = clients.get(socketId)
+              console.log("write", buffer, byteOffset, byteLength)
+              if (socket.send(buffer, byteOffset, byteLength)) {
+                resolve()
+              } else {
+                socket.ondrain = resolve
+                socket.onerror = ({ name, message }) =>
+                  reject(new IOError(`${name}: ${message}`))
+              }
+            })
+          }
         }
       }
     }

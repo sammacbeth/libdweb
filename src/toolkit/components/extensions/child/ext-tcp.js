@@ -90,16 +90,17 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
           return derefSocket(this).closed
         }
         write(buffer, byteOffset, byteLength) {
-          const socket = derefSocket(this)
-          if (socket.send(buffer, byteOffset, byteLength)) {
-            return voidPromise
-          } else {
-            return new context.cloneScope.Promise((resolve, reject) => {
-              socket.ondrain = () => resolve()
-              socket.onerror = ({ name, message }) =>
-                reject(new IOError(`${name}: ${message}`))
-            })
-          }
+          return new context.cloneScope.Promise(async (resolve, reject) => {
+            try {
+              const result = await context.childManager.callParentAsyncFunction(
+                "TCPSocket.write",
+                [this.__id, buffer, byteOffset, byteLength]
+              )
+              resolve()
+            } catch (e) {
+              reject(e.toString())
+            }
+          })
         }
         read() {
           return new context.cloneScope.Promise(async (resolve, reject) => {
