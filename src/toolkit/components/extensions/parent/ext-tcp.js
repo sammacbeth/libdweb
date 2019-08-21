@@ -43,7 +43,6 @@ interface Host {
 Cu.importGlobalProperties(["URL"])
 
 {
-  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {})
   const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {})
   const { TCPSocket, TCPServerSocket } = Cu.getGlobalForObject(OS)
   const { ExtensionUtils } = Cu.import(
@@ -54,22 +53,7 @@ Cu.importGlobalProperties(["URL"])
     Ci.nsIEnvironment
   )
 
-  // const url = Components.stack.filename.split("->").pop()
-  // const { TCPSocketAdapter, TCPServerSocketAdapter } = Cu.import(
-  //   new URL(`./TCP.js`, url),
-  //   {}
-  // )
-
   const { ExtensionError } = ExtensionUtils
-
-  const AsAsyncIterator = constructor => {
-    const $Symbol /*:any*/ = Symbol
-    const prototype /*:Object*/ = constructor.prototype
-    prototype[$Symbol.asyncIterator] = function() {
-      return this
-    }
-    return constructor
-  }
 
   class IOError extends ExtensionError {
     static throw(message) /*:empty*/ {
@@ -185,7 +169,6 @@ Cu.importGlobalProperties(["URL"])
     getAPI(context) {
       const servers = new Map()
       const clients = new Map()
-      const connections = new WeakMap()
       const sockets = new Set()
 
       context.callOnClose({
