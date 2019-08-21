@@ -265,8 +265,8 @@ Cu.importGlobalProperties(["URL"])
                 socket.ondrain = () => {
                   emit(["drain", serialiseSocket(socket, client.id)])
                 }
-                socket.ondata = () => {
-                  emit(["data", serialiseSocket(socket, client.id)])
+                socket.ondata = event => {
+                  emit(["data", serialiseSocket(socket, client.id), event.data])
                 }
                 resolve(client)
               } catch (error) {
@@ -277,17 +277,18 @@ Cu.importGlobalProperties(["URL"])
           pollEventQueue: () => {
             return new context.cloneScope.Promise(resolve => {
               if (eventQueue.length > 0) {
-                resolve(Cu.cloneInto(eventQueue, context.cloneScope))
+                resolve(eventQueue)
                 eventQueue = []
               } else {
                 pendingPoll = event => {
-                  resolve(Cu.cloneInto([event], context.cloneScope))
+                  resolve([event])
                   eventQueue = []
                   pendingPoll = null
                 }
               }
             })
-          }
+          },
+          write: (socketId, data) => {}
         }
       }
     }
