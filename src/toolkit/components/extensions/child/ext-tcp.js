@@ -103,7 +103,7 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
           })
         }
         read() {
-          return new context.cloneScope.Promise(async (resolve, reject) => {
+          return new context.cloneScope.Promise(async resolve => {
             const internal = connectionInternal.get(this.__id)
             if (internal.buffer.length > 0) {
               resolve(internal.buffer.shift())
@@ -115,21 +115,38 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
           })
         }
         suspend() {
-          derefSocket(this).suspend()
+          context.childManager.callParentAsyncFunction("TCPSocket.suspend", [
+            this.__id
+          ])
         }
         resume() {
-          derefSocket(this).resume()
+          context.childManager.callParentAsyncFunction("TCPSocket.resume", [
+            this.__id
+          ])
         }
         close() {
-          derefSocket(this).close()
-          return voidPromise
+          return new context.cloneScope.Promise(async resolve => {
+            await context.childManager.callParentAsyncFunction(
+              "TCPSocket.close",
+              [this.__id]
+            )
+            resolve()
+          })
         }
         closeImmediately() {
-          derefSocket(this).closeImmediately()
-          return voidPromise
+          return new context.cloneScope.Promise(async resolve => {
+            await context.childManager.callParentAsyncFunction(
+              "TCPSocket.closeImmediately",
+              [this.__id]
+            )
+            resolve()
+          })
         }
         upgradeToSecure() {
-          return derefSocket(this).upgradeToSecure()
+          context.childManager.callParentAsyncFunction(
+            "TCPSocket.upgradeToSecure",
+            [this.__id]
+          )
         }
       }
     )
