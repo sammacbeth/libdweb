@@ -227,11 +227,9 @@ Cu.importGlobalProperties(["URL"])
           listen: options =>
             new context.cloneScope.Promise(async (resolve, reject) => {
               try {
-                const id = serverIdx++
+                const id = ++serverIdx
                 const server = await Server.new(options)
 
-                sockets.add(server)
-                // connections.set(socket.connections, server.connections)
                 servers.set(id, server)
                 console.log("xxx", server, id)
                 resolve({
@@ -317,6 +315,39 @@ Cu.importGlobalProperties(["URL"])
           upgradeToSecure: socketId => {
             const socket = clients.get(socketId)
             socket.upgradeToSecure()
+          },
+          closeServer: serverId => {
+            const server = servers.get(serverId)
+            server.close()
+            servers.delete(serverId)
+          },
+          pollServer: serverId => {
+            const server = servers.get(serverId)
+            return new context.cloneScope.Promise((resolve, reject) => {
+              server.connections.request(socket => {
+                if (socket) {
+                  const client = serialiseSocket(socket, ++connectionIdx)
+                  clients.set(client.id, socket)
+
+                  socket.onopen = () => {
+                    emit(["open", serialiseSocket(socket, client.id)])
+                  }
+                  socket.onclose = () => {
+                    emit(["close", serialiseSocket(socket, client.id)])
+                  }
+                  socket.ondata = event => {
+                    emit([
+                      "data",
+                      serialiseSocket(socket, client.id),
+                      event.data
+                    ])
+                  }
+                  resolve(client)
+                } else {
+                  resolve()
+                }
+              }, reject)
+            })
           }
         }
       }
