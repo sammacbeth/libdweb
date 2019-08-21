@@ -52,8 +52,7 @@ const exportInstance = /*::<a:Object, b:a>*/ (
 global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
   getAPI(context) {
     const connections = new Map()
-    const socketOpenResolvers = new Map()
-    const socketCloseResolvers = new Map()
+    const connectionInternal = new Map()
 
     const derefSocket = client => {
       return connections.get(client.__id)
@@ -103,11 +102,16 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
           }
         }
         read() {
-          return context.wrapPromise(
-            new Promise((resolve, reject) => {
-              derefSocket(this).ondata = event => resolve(event.data)
-            })
-          )
+          return new context.cloneScope.Promise(async (resolve, reject) => {
+            const internal = connectionInternal.get(this.__id)
+            if (internal.buffer.length > 0) {
+              resolve(internal.buffer.shift())
+            } else {
+              internal.ondata = () => {
+                resolve(internal.buffer.shift())
+              }
+            }
+          })
         }
         suspend() {
           derefSocket(this).suspend()
@@ -135,19 +139,26 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
         []
       )
       console.log("xxx events", events)
-      events.forEach(([type, data]) => {
-        const socket = connections.get(data.id)
+      events.forEach(event => {
+        const type = event[0]
+        const socket = Object.assign(connections.get(event[1].id), event[1])
+        const internal = connectionInternal.get(event[1].id)
+        connections.set(socket.id, socket)
         switch (type) {
           case "open":
-            socketOpenResolvers.get(data.id)()
-            socketOpenResolvers.delete(data.id)
+            internal.onOpened()
             break
           case "close":
-            socketCloseResolvers.get(data.id)()
-            socketCloseResolvers.delete(data.id)
+            internal.onClosed()
+            break
+          case "data":
+            internal.buffer.push(event[2])
+            if (internal.ondata) {
+              internal.ondata()
+              internal.ondata = null
+            }
             break
         }
-        connections.set(data.id, Object.assign(socket, data))
       })
       pollEvents()
     }
@@ -177,13 +188,17 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
                 [options]
               )
               console.log("xxx", socket)
+              const internals = {
+                buffer: []
+              }
               socket.opened = new context.cloneScope.Promise(resolve => {
-                socketOpenResolvers.set(socket.id, resolve)
+                internals.onOpened = resolve
               })
               socket.closed = new context.cloneScope.Promise(resolve => {
-                socketCloseResolvers.set(socket.id, resolve)
+                internals.onClosed = resolve
               })
               connections.set(socket.id, socket)
+              connectionInternal.set(socket.id, internals)
 
               const client = exportInstance(context.cloneScope, TCPClient)
               client.__id = socket.id
