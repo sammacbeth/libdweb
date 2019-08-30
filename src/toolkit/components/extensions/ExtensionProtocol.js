@@ -272,7 +272,6 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
     this.body = null
   }
   QueryInterface(iid) {
-    console.log(`Channel.QueryInterface ${getInterfaceByID(iid)}`)
     const isSupported =
       false ||
       iid.equals(Ci.nsISupports) ||
@@ -302,22 +301,6 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
     method,
     streamHasHeaders
   ) {
-    console.log(
-      `nsIUploadChannel2.explicitSetUploadStream`,
-      stream,
-      contentType,
-      contentLength,
-      method,
-      streamHasHeaders
-    )
-    console.log(
-      "!!!!!!!!!!!!!!!!!!",
-      JSON.stringify({
-        available: stream.available(),
-        isNonBlocking: stream.isNonBlocking()
-      })
-    )
-
     this.setPropertyAsAString("content-type", contentType)
     this.setPropertyAsAString("content-length", contentLength)
     this.contentType = contentType
@@ -562,7 +545,7 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
     if (this.mimeType != null) {
       const { listener } = this
       try {
-        console.log(`Channel.listener.onStartRequest ${this.mimeType}`)
+        debug && console.log(`Channel.listener.onStartRequest ${this.mimeType}`)
         listener && listener.onStartRequest(this)
       } catch (_) {
         console.error(_)
@@ -570,9 +553,10 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
     }
   }
   onWriteResponseStream({ buffer }) {
-    console.log(
-      `Channel.onWriteResponseStream ${typeof buffer} ${String(buffer)} )}`
-    )
+    debug &&
+      console.log(
+        `Channel.onWriteResponseStream ${typeof buffer} ${String(buffer)} )}`
+      )
     const stream = streamFromBuffer(buffer)
     const { listener, context } = this
 
