@@ -169,12 +169,14 @@ Cu.importGlobalProperties(["URL"])
     getAPI(context) {
       const servers = new Map()
       const clients = new Map()
-      const sockets = new Set()
 
       context.callOnClose({
         close() {
-          debug && console.log(`TCPSocket API unload ${sockets.size}`)
-          for (const socket of sockets) {
+          debug && console.log(`TCPSocket API unload ${clients.size}`)
+          for (const server of servers.values()) {
+            server.close()
+          }
+          for (const socket of clients.values()) {
             socket.closeImmediately()
           }
         }
@@ -223,7 +225,7 @@ Cu.importGlobalProperties(["URL"])
                   localPort: server.localPort
                 })
               } catch (error) {
-                reject(error)
+                reject(error.message)
               }
             }),
           connect: options =>
@@ -242,14 +244,15 @@ Cu.importGlobalProperties(["URL"])
                 }
                 socket.onclose = () => {
                   emit(["close", serialiseSocket(socket, client.id)])
+                  // cleanup the socket after 1s
+                  setTimeout(() => clients.delete(client.id), 1000)
                 }
                 socket.ondata = event => {
                   emit(["data", serialiseSocket(socket, client.id), event.data])
                 }
                 resolve(client)
               } catch (error) {
-                console.error(error)
-                reject(error.toString())
+                reject(error.message)
               }
             }),
           pollEventQueue: () => {
