@@ -20,36 +20,10 @@ interface Host {
 Cu.importGlobalProperties(["URL"])
 
 {
-  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {})
-  const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {})
-  const { ExtensionUtils } = Cu.import(
-    "resource://gre/modules/ExtensionUtils.jsm",
-    {}
-  )
-
-  const { ExtensionError } = ExtensionUtils
-
-  const $Symbol /*:any*/ = Symbol
-
-  class IOError extends ExtensionError {
-    static throw(message) /*:empty*/ {
-      const self = new this(message)
-      throw self
-    }
-  }
-
-  const wrapUnprivilegedFunction = (f, scope) => input =>
-    f(Cu.cloneInto(input, scope))
-
   global.UDPSocket = class extends ExtensionAPI /*::<Host>*/ {
     getAPI(context) {
-      const refs = {
-        sockets: new WeakMap(),
-        messages: new WeakMap()
-      }
       const sockets = new Map()
       const messages = new Map()
-
       const notFoundPromise = "not found"
 
       class MessagesHost {
@@ -296,67 +270,5 @@ Cu.importGlobalProperties(["URL"])
     }
   }
 
-  const exportInstance = /*::<a:Object, b:a>*/ (
-    scope,
-    constructor /*:Class<b>*/,
-    properties /*::?:a*/
-  ) /*:b*/ => {
-    const instance /*:any*/ = properties
-      ? Cu.cloneInto(properties, scope)
-      : Cu.cloneInto({}, scope)
-    Reflect.setPrototypeOf(
-      Cu.waiveXrays(instance),
-      Cu.waiveXrays(constructor).prototype
-    )
-    return instance
-  }
-
-  const exportClass = /*::<b, a:Class<b>>*/ (
-    scope /*:Object*/,
-    constructor /*:a*/
-  ) /*:a*/ => {
-    const clone = Cu.exportFunction(constructor, scope)
-    const unwrapped = Cu.waiveXrays(clone)
-    const prototype = Cu.waiveXrays(Cu.createObjectIn(scope))
-
-    const source = constructor.prototype
-    for (const key of Reflect.ownKeys(constructor.prototype)) {
-      if (key !== "constructor") {
-        const descriptor = Reflect.getOwnPropertyDescriptor(source, key)
-        Reflect.defineProperty(
-          prototype,
-          key,
-          Cu.waiveXrays(
-            Cu.cloneInto(descriptor, scope, {
-              cloneFunctions: true
-            })
-          )
-        )
-      }
-    }
-
-    Reflect.defineProperty(unwrapped, "prototype", {
-      value: prototype
-    })
-    Reflect.defineProperty(prototype, "constructor", {
-      value: unwrapped
-    })
-
-    return clone
-  }
-
-  const exportAsyncIterator = /*::<b:Object, a:Class<b>>*/ (
-    scope /*:Object*/,
-    constructor /*:a*/
-  ) /*:a*/ => {
-    const $Symbol /*:any*/ = Symbol
-    const prototype /*:Object*/ = constructor.prototype
-    prototype[$Symbol.asyncIterator] = function() {
-      return this
-    }
-    return exportClass(scope, constructor)
-  }
-
-  const noOptions = {}
-  const debug = true
+  const debug = false
 }

@@ -20,28 +20,7 @@ interface Host {
 Cu.importGlobalProperties(["URL"])
 
 {
-  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {})
-  const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {})
-  const { ExtensionUtils } = Cu.import(
-    "resource://gre/modules/ExtensionUtils.jsm",
-    {}
-  )
-
-  const { ExtensionError } = ExtensionUtils
-
-  const $Symbol /*:any*/ = Symbol
-
-  class IOError extends ExtensionError {
-    static throw(message) /*:empty*/ {
-      const self = new this(message)
-      throw self
-    }
-  }
-
-  const wrapUnprivilegedFunction = (f, scope) => input =>
-    f(Cu.cloneInto(input, scope))
-
-  const getAPIClasses = (context, refs, sockets) => {
+  const getAPIClasses = context => {
     class UDPSocketClient /*::implements UDPSocket*/ {
       /*::
       address:SocketAddress
@@ -169,20 +148,6 @@ Cu.importGlobalProperties(["URL"])
       }
     }
 
-    const voidPromise /*:Promise<void>*/ = context.cloneScope.Promise.resolve()
-    const doneIteration = Cu.cloneInto({ done: true }, context.cloneScope)
-    const notFound = new ExtensionError("Host for the object not found")
-    let notFoundPromiseCache = null
-
-    const notFoundPromise = () => {
-      if (notFoundPromiseCache) {
-        return notFoundPromiseCache
-      } else {
-        notFoundPromiseCache = context.cloneScope.Promise.reject(notFound)
-        return notFoundPromiseCache
-      }
-    }
-
     const Messages = exportAsyncIterator(context.cloneScope, MessagesClient)
 
     return {
@@ -218,8 +183,7 @@ Cu.importGlobalProperties(["URL"])
             })
             resolve(client)
           } catch (e) {
-            console.error(e.toString())
-            reject(new ExtensionError(e))
+            reject(e.message)
           }
         })
     }
@@ -232,15 +196,6 @@ Cu.importGlobalProperties(["URL"])
         messages: new WeakMap()
       }
       const sockets = new Set()
-
-      // context.callOnClose({
-      //   close() {
-      //     for (const socket of sockets) {
-      //       socket.close()
-      //     }
-      //     sockets.clear()
-      //   }
-      // })
 
       return { UDPSocket: getAPI(context, refs, sockets) }
     }
@@ -308,5 +263,4 @@ Cu.importGlobalProperties(["URL"])
   }
 
   const noOptions = {}
-  const debug = true
 }
