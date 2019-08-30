@@ -310,7 +310,7 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
               })
               resolve(server)
             } catch (e) {
-              reject(new ExtensionError(e.toString()))
+              reject(e)
             }
           }),
         connect: options =>
@@ -322,8 +322,7 @@ global.TCPSocket = class extends ExtensionAPI /*::<Host>*/ {
               )
               resolve(createClientSocket(socket))
             } catch (e) {
-              console.error(e.toString())
-              reject(new ExtensionError(e))
+              reject(e)
             }
           })
       }
