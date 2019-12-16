@@ -363,7 +363,7 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
         this.listener = listener
         this.context = context
         this.status = Cr.NS_OK
-        this.loadGroup.addRequest(this, context)
+        this.loadGroup && this.loadGroup.addRequest(this, context)
         return this.start()
       }
       default: {
@@ -635,7 +635,7 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
       }
       if (status != Cr.NS_BINDING_ABORTED) {
         listener && listener.onStopRequest(this, status)
-        this.loadGroup.removeRequest(this, context, status)
+        this.loadGroup && this.loadGroup.removeRequest(this, context, status)
       }
     } catch (_) {
       debug && console.error(`Failed onStopRequest${pid} ${_} `)
