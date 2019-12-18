@@ -685,7 +685,7 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
   }
 
   get enumerator() {
-    throw Error("Not implemented")
+    return this.properties.enumerator()
   }
   getPropertyAsInt32(name) {
     return this.get(name)
