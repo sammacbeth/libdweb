@@ -685,7 +685,16 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
   }
 
   get enumerator() {
-    return this.properties.enumerator()
+    const keys = Object.keys(this.properties)
+    let i = 0
+    return {
+      getNext() {
+        return keys[i++]
+      },
+      hasMoreElements() {
+        return i < keys.length
+      }
+    }
   }
   getPropertyAsInt32(name) {
     return this.get(name)
