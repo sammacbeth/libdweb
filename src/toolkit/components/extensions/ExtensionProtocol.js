@@ -575,7 +575,7 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
         )
       } catch (_) {}
 
-      console.log(`Channel.listener.onStartRequest ${this.mimeType}`)
+      debug && console.log(`Channel.listener.onStartRequest ${this.mimeType}`)
       listener && listener.onStartRequest(this)
     }
 
@@ -625,7 +625,7 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
   }
 
   stop() {
-    console.log(`Channel.stop ${pid} ${JSON.stringify(this)}`)
+    debug && console.log(`Channel.stop ${pid} ${JSON.stringify(this)}`)
     this.readyState = CLOSED
     this.contentLength = this.byteOffset
     const { listener, context, status, readyState } = this
@@ -680,7 +680,7 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
     this.setPropertyAsInterface(name, value)
   }
   setPropertyAsInterface(name, value /*:mixed*/) {
-    console.log(`Channel.setPropertyAs*(${name}, ${String(value)})`)
+    debug && console.log(`Channel.setPropertyAs*(${name}, ${String(value)})`)
     this.properties[name] = value
   }
 
@@ -733,7 +733,7 @@ class Channel /*::implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrita
 
   get(name) /*:any*/ {
     const value = this.properties[name]
-    console.log(`Channel.getPropertyAs*(${name}, ${String(value)})`)
+    debug && console.log(`Channel.getPropertyAs*(${name}, ${String(value)})`)
     return value
   }
 
@@ -1234,7 +1234,7 @@ class Agent {
 
     const protocols /*: { [string]: ProtocolSpec } */ =
       cpmm.initialProcessData[PROTOCOLS]
-    console.log(`Initial protocols ${JSON.stringify(protocols)}`)
+    debug && console.log(`Initial protocols ${JSON.stringify(protocols)}`)
 
     if (protocols) {
       for (let scheme in protocols) {
@@ -1331,7 +1331,7 @@ class Factory /*::implements nsIFactory<nsIProtocolHandler>*/ {
     if (iid.equals(Ci.nsISupports) || iid.equals(Ci.nsIFactory)) {
       return this
     }
-    console.log(`Factory.QueryInterface ${iid.name} ${iid.number}\n`)
+    debug && console.log(`Factory.QueryInterface ${iid.name} ${iid.number}\n`)
     throw Cr.NS_ERROR_NO_INTERFACE
   }
 }

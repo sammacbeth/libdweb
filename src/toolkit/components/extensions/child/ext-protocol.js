@@ -156,8 +156,8 @@ interface Client {
               value == null
                 ? null
                 : typeof value === "string"
-                ? encoder.encode(value).buffer
-                : value.buffer
+                  ? encoder.encode(value).buffer
+                  : value.buffer
 
             if (buffer) {
               this.enqueue(buffer)
@@ -267,7 +267,7 @@ interface Client {
     }
     register(scheme /*: string */, handler /*: Handler */) {
       this.handlers[scheme] = handler
-      console.log(`register "${scheme}" protocol handler: ${String(handler)}`)
+      // console.log(`register "${scheme}" protocol handler: ${String(handler)}`)
       this.outbox.sendAsyncMessage(OUTBOX, {
         type: "register",
         scheme,
@@ -277,9 +277,9 @@ interface Client {
     unregister(scheme /*:string*/) {
       const handler = this.handlers[scheme]
       if (handler != null) {
-        console.log(
-          `unregister "${scheme}" protocol handler: ${String(handler)}`
-        )
+        // console.log(
+        //   `unregister "${scheme}" protocol handler: ${String(handler)}`
+        // )
         this.outbox.sendAsyncMessage(OUTBOX, {
           type: "unregister",
           scheme,
