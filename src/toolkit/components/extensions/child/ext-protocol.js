@@ -331,6 +331,7 @@ import type { HandlerInbox, HandlerOutboxMessage, Port, ReadyState, HandlerOutbo
       if (this.readyState === IDLE) {
         this.readyState = ACTIVE
         const { response, id } = this
+        console.log("xxx", await response)
         const { status, statusText, ok, headers, body } = Cu.waiveXrays(
           await response
         )
@@ -501,7 +502,9 @@ import type { HandlerInbox, HandlerOutboxMessage, Port, ReadyState, HandlerOutbo
     async handleRequest(scheme, request) {
       try {
         const event = Cu.cloneInto({}, this.context.cloneScope)
-        Reflect.defineProperty(event, "request", { value: request })
+        Reflect.defineProperty(event, "request", {
+          value: { url: request.url }
+        })
         const { response } = await this.protocolHandlers[scheme].raw(event)
         return response
       } catch (error) {
