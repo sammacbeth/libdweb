@@ -625,7 +625,7 @@ class Channel /*:: implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrit
       }
       if (status != Cr.NS_BINDING_ABORTED) {
         listener.onStopRequest(this, status);
-        this.loadGroup.removeRequest(this, context, status);
+        this.loadGroup && this.loadGroup.removeRequest(this, context, status);
       }
     } finally {
       this.dispose();
@@ -672,7 +672,16 @@ class Channel /*:: implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrit
   }
 
   get enumerator() {
-    throw Error("Not implemented");
+    const keys = Object.keys(this.properties)
+    let i = 0
+    return {
+      getNext() {
+        return keys[i++]
+      },
+      hasMoreElements() {
+        return i < keys.length
+      }
+    }
   }
   getPropertyAsInt32(name) {
     return this.get(name);
