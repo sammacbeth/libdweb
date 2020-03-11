@@ -46,7 +46,7 @@ class ProtocolUtil {
   static isEnabled(extension) {
     return Services.prefs.getBoolPref(
       `libdweb.protocol.${extension.id}`,
-      false
+      true
     );
   }
   static isSchemeAllowed(extension, scheme) {
@@ -61,21 +61,21 @@ class ProtocolUtil {
     return false;
   }
   static ensurePermission(extension, scheme) {
-    if (!ProtocolUtil.isPermitted(extension)) {
-      throw new ExtensionUtils.ExtensionError(
-        "API is only available on nightly and dev edition"
-      );
-    }
-    if (!ProtocolUtil.isEnabled(extension)) {
-      throw new ExtensionUtils.ExtensionError(
-        "Only whitelisted extensions can use protocol API."
-      );
-    }
-    if (!ProtocolUtil.isSchemeAllowed(extension, scheme)) {
-      throw new ExtensionUtils.ExtensionError(
-        `Permission denied to register a protocol ${scheme} it needs to be present in manifest protocol`
-      );
-    }
+    // if (!ProtocolUtil.isPermitted(extension)) {
+    //   throw new ExtensionUtils.ExtensionError(
+    //     "API is only available on nightly and dev edition"
+    //   );
+    // }
+    // if (!ProtocolUtil.isEnabled(extension)) {
+    //   throw new ExtensionUtils.ExtensionError(
+    //     "Only whitelisted extensions can use protocol API."
+    //   );
+    // }
+    // if (!ProtocolUtil.isSchemeAllowed(extension, scheme)) {
+    //   throw new ExtensionUtils.ExtensionError(
+    //     `Permission denied to register a protocol ${scheme} it needs to be present in manifest protocol`
+    //   );
+    // }
   }
 }
 

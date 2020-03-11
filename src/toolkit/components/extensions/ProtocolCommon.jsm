@@ -414,7 +414,7 @@ class Channel /*:: implements nsIChannel, nsIUploadChannel2, nsIRequest, nsIWrit
         this.listener = outListener;
         this.context = context;
         this.status = Cr.NS_OK;
-        this.loadGroup.addRequest(this, context);
+        this.loadGroup && this.loadGroup.addRequest(this, context);
         return this.start();
       }
       default: {

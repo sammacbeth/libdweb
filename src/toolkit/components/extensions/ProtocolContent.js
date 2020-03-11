@@ -11,7 +11,11 @@ import type { nsIIDRef, nsIMessageListener, nsILoadInfo, nsIURI } from "gecko";
 import type { Inn, Out, AgentOutbox, AgentInbox, ProtocolSpec, ResponseMessage, AgentOutboxMessage, RequestChannel } from "../../components/extensions/interface/protocol.js";
 */
 
-const PROTOCOL_COMMON = "resource://gre/modules/ProtocolCommon.jsm"
+// const PROTOCOL_COMMON = "resource://gre/modules/ProtocolCommon.jsm"
+const PROTOCOL_COMMON = new URL(
+  "./ProtocolCommon.jsm",
+  Components.stack.filename
+)
 
 /*:: import * as ProtocolCommon from "./ProtocolCommon.jsm" */
 ChromeUtils.defineModuleGetter(this, "ProtocolCommon", PROTOCOL_COMMON)

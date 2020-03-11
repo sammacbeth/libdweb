@@ -28,7 +28,7 @@
     "namespace": "protocol",
     "description": "Use the <code>browser.protocol</code> API to register, custom protocol service.",
     "manifest": ["protocol"],
-    "permissions": ["protocol"],
+    "//permissions": ["protocol"],
     "types": [
       {
         "id": "Scheme",

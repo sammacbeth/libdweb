@@ -19,6 +19,7 @@ try {
   )
   /*:: const { XPCOMUtils } =*/
   ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
+  Components.utils.importGlobalProperties(["URL"])
 
   /*::
 const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
@@ -47,7 +48,7 @@ const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
   )
 
   /*:: import * as ProtocolCommon from "../../../modules/addons/ProtocolCommon.jsm";*/
-  // ChromeUtils.defineModuleGetter(this, "ProtocolCommon", PROTOCOL_COMMON);
+  ChromeUtils.defineModuleGetter(this, "ProtocolCommon", PROTOCOL_COMMON)
 
   const REQUESTOR_INBOX = `libdweb:protocol:requestor:inbox`
   const REQUESTOR_OUTBOX = `libdweb:protocol:requestor:outbox`
@@ -239,7 +240,7 @@ const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
       loadInfo /*: nsILoadInfo */
     ) /*: RequestChannel */ {
       const id = `${url.scheme}:${++this.id}:ProtocolService`
-      const channel = new ProtocolCommon.newChannel(this, url, loadInfo, id)
+      const channel = ProtocolCommon.newChannel(this, url, loadInfo, id)
       const requestor = new ParentRequestorPort(channel)
       this.requestors[id] = requestor
       return channel
